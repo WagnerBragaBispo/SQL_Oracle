@@ -1,0 +1,35 @@
+/*
+De: GABRIEL FRANCISCO MARQUES CAMARGO GONCALVES SILVA <gabriel.camargo@claro.com.br> 
+Enviada em: quinta-feira, 24 de setembro de 2020 12:32
+Para: WAGNER BRAGA BISPO <wagner.bispo@claro.com.br>
+Cc: LUCIANA RODRIGUES XIMENES <Luciana.Ximenes@claro.com.br>; LUIZ CARLOS PEROSA <LUIZ.PEROSA@claro.com.br>
+Assunto: RES: Help-me | INTMKT.FS_CONT_RAT_BAS_LINH_ATIVA_CMV (DWH)
+*/
+
+
+SELECT FAM.DW_NUM_NTC,
+       FAM.NUM_NTC
+  FROM DMMKT.DM_FP_BASE_ASSINANTE FAM, DWH.BI_DIM_TIPO_MOVIMENTO TM
+WHERE 0 = 0
+   AND FAM.COD_TIPO_MOV_DW_AJUSTADO > 0
+   AND TM.COD_TIPO_MOV_DW = FAM.COD_TIPO_MOV_DW_AJUSTADO
+   AND TM.IND_BASE_ATIVA = 'S'
+   AND FAM.DAT_EXPIRACAO_DW IS NULL
+   AND FAM.DAT_MOVIMENTO IN
+       LAST_DAY(TRUNC(TO_DATE('01/08/2020', 'DD/MM/YYYY'), 'MM'))
+   AND FAM.COD_PLATAFORMA_ATU||FAM.cod_sub_sts_atu <> 'PREPGZB1'
+   AND FAM.COD_PLATAFORMA_ATU <> 'SGIOT'
+GROUP BY FAM.DW_NUM_NTC,
+FAM.NUM_NTC
+
+
+/*
+GABRIEL CAMARGO
+ESTRATÉGIA E GESTÃO OPERACIONAL
+Diretoria de Indicadores do Negócio | Gestão de Informações
+T.: +55 11 94514-4153 C.: +55 11 4313-1404
+gabriel.camargo@claro.com.br 
+
+www.claro.com.br
+
+*/
