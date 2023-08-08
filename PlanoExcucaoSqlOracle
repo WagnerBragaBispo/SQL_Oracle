@@ -1,0 +1,38 @@
+'''
+Plano de Excução do SQL Oracle
+
+Instrução Curos da Alura: https://cursos.alura.com.br/course/desempenho-oracle-database-otimizacao-consultas/task/115843
+
+[00:00] Então, nós aprendemos no vídeo anterior que é comum haver várias maneiras de executar uma instrução SQL. Vamos considerar um exemplo bem trivial: Eu tenho uma tabela chamada “TAB_COLABORADOR”, que possui uma lista de funcionário de uma empresa.
+
+[00:20] Cada linha dessa tabela tem uma coluna chamada “Salário”, que tem um salário de cada funcionário. E essa coluna “Salário” tem um índice. Então, eu tenho uma consulta que vai recuperar o nome dos funcionário em que o salário seja maior do que um determinado valor, um determinado número.
+
+[00:44] Para responder essa pergunta, eu tenho dois tipos de planos de execução. O primeiro, eu vou percorrer a tabela inteira, para cada linha eu vou olhando o valor e vou comparando com o mesmo valor que está no filtro. Eu vou vendo se o salário do funcionário é maior ou não, que o número que eu coloquei na condição, e vou obtendo a minha resposta.
+
+[01:12] Ou então, eu posso resolver esse mesmo SQL usando a coluna de índice, pelo índice eu consigo capturar mais facilmente, identificar mais facilmente as linhas que respeitem uma determinada condição, afinal, dentro do índice eu já tenho os valores do salário ordenados de forma crescente, então, fica mais fácil quando eu tenho uma condição de teste maior do que algum valor, para poder achar isso dentro dessa lista ordenada.
+
+[01:46] Então, esse Plano1 e Plano2 são os dois planos de execuções diferentes que eu posso usar caso eu queira resolver uma SQL em que eu quero ver a lista dos funcionários respeitando uma condição específica para o salário. Vamos olhar a primeira consulta.
+
+[02:06] A primeira consulta eu quero saber o nome dos funcionário cujo o salário é maior que 10 mil. Fica óbvio que ela é muito mais rápida se eu executar o método do índice. Pelo índice, eu já me desloco diretamente a um valor limite do filtro dentro do índice, e basta percorrer o índice desse ponto até o final, e pelo conteramento que o índice mostra a localização de cada linha, eu vou ter a minha resposta, eu vou gastar um tempo muito menor para resolver esse problema.
+
+[02:39] Agora, a segunda consulta, no entanto, ela vai ser mais rápida se usarmos a varredura completa da tabela, sem índice, afinal, se eu quero ver o salário maior que 0, e eu sei que ninguém ganha salário negativo, é óbvio que essa segunda consulta, eu já retorno automaticamente a tabela toda. Então, eu não preciso do índice para achar essa resposta. Então, o índice é eficiente se eu quero limitar minha saída, buscar alguma coisa maior do que um valor diferente de 0.
+
+[03:12] Mas se a saída for a tabela como um todo, a varredura da tabela é muito mais eficiente. Então, eu mostrei para vocês dois exemplos de SQL, em que dependendo do que eu tenho na condição do filtro, um plano vai ser melhor do que o outro. Agora, vamos supor que o meu SQL usado na condição de salário maior que 10 mil, e escolhemos como resposta o plano do índice. Mas vamos supor ainda que eu só tenha um funcionário na tabela, minha tabela está vazia, e esse funcionário é quem ganha mais de 10 mil.
+
+[03:52] Então, apesar de termos concordado que quando queremos buscar um valor maior do que 0, usar o índice é melhor, se a tabela tiver poucas linhas não vale a pena eu usar o índice, vale a pena eu varrer a tabela. Ou seja, a estatística da tabela, que informa ao Oracle quantas linhas eu tenho na tabela, quantos blocos de segmento a tabela está ocupando, os valores máximos e mínimos das colunas e a profundidade do índice, essas estatísticas vão fazer com que, independente do tipo de condição que eu estou usando, se eu vou ou não usar o índice.
+
+[04:33] O Oracle internamente vai ser esperto o suficiente para escolher qual é a melhor condição. Então, eu mostrei para vocês quais são as estatísticas sobre as características da tabela. Então, para fazer essa decisão o Oracle usa uma árvore, ele vai primeiro perguntar se tem índice, e tem, vai perguntar se a tabela é muito grande, ela é, então usa o índice. Se tiver índice, mas a tabela não for muito grande, for pequena, então, eu varre a tabela toda. Então, as estatísticas sobre o número de linhas que eu tenho na tabela é fundamental para o otimizador escolher o plano de execução que ele vai fazer no caso desse SQL específico, caso esteja executando esse SQL que eu coloquei como exemplo.
+
+[05:26] Então, essa decisão de escolher o plano de execução vai estar baseado em uma estimativa de tamanho da tabela, que o otimizador vai pegar nas estatísticas. Então, o otimizador vai fazer palpites de quantas linhas e blocos eu vou ter que acessar pelos vários métodos de execução para poder fazer a escolha que eu coloquei no SQL.
+
+[05:53] A precisão desse palpite é crítico para você escolher um plano de execução com melhor desempenho. E vai depender muito de você escolher corretamente esse plano de execução a frequência com que as estatísticas estão sendo coletadas e o tamanho da amostra.
+
+[06:15] Em alguns casos, essas estimativas até podem trazer valores errado, e isso acontece porque normalmente são estatísticas antigas ou baseadas em uma amostra, por exemplo, que não seja adequada. Para resolver essa anomalia, a Oracle possui dois recursos que são usados pelo otimizador para corrigir esses problemas, são o que chamamos de “diretivas de plano SQL”. E outra coisa são os planos de execução adaptáveis.
+
+[06:51] Durante a execução da instrução o otimizador vai monitorar quantas linhas realmente vão ser retornadas a cada etapa. Nesse caso, por exemplo, eu tenho seis linhas que vão ser retornadas quando executar o SQL que está sendo marcado. E eu vou comparar com a estimativa que está dentro das estatísticas, eu utilizei a estatística para escolher o melhor plano de execução. Então, no caso, com a estatística está desatualizada, ela está dizendo que a tabela tem quatro linhas, mas quando eu resolvi escolher o plano de execução 1, na varredura da tabela inteira, baseado no valor 4 que estava salvo na estatística, mas na hora de resolver a consulta, me retornou 6, um valor diferente do que está na estatística.
+
+[07:53] Se esses números entre o que está na estatística versus o que está realmente na consulta, forem divergentes, ou seja, o otimizador achou que a tabela tinha um determinado número, e na hora de fazer a execução retornou outro número, o Oracle vai criar o que chamamos de uma diretiva de plano do SQL. Essa diretiva vai ser usada não nessa consulta, afinal essa consulta já foi feita, já foi perdida, vai demorar, vai vir valores errados caso essas estatísticas não estejam legais.
+
+[08:38] Mas ele vai gravar essa diretiva junto com as estatísticas, e quando eu rodar uma outra instrução SQL que envolva essa tabela, na hora de decidir o plano de execução, o otimizador vai ver que tem uma diretiva, e ele vai reunir informações adicionais às estatísticas, e vai juntar isso com as diretivas para poder tomar uma melhor decisão.
+
+[09:05] Então, era isso, um abraço e até o próximo vídeo.
